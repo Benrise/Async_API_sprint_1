@@ -64,14 +64,15 @@ class FilmService:
                 genre: str
             ) -> List[Film]:
         es_body = build_body(query, page, size, sort_order, sort_field, genre)
-        cache_key = f'films:{query}'
+        cache_key = f'films:{query}:{sort_order}:{sort_field}:{page}:{size}:{genre}'
+        print(cache_key)
         films = await self._films_from_cache(cache_key)
         if films:
             return films
         films = await self._get_films_from_elastic(es_body)
         if not films:
             return []
-        await self._put_films_to_cache(films)
+        await self._put_films_to_cache(films, cache_key)
         return films
 
     async def _get_films_from_elastic(self, body: dict) -> Optional[List[Film]]:
@@ -83,12 +84,12 @@ class FilmService:
         return films
 
     async def _films_from_cache(self, cache_key: str) -> Optional[List[Film]]:
-        films = await self.redis.get(cache_key)
+        films: List[Film] = await self.redis.get(cache_key)
         if not films:
             return None
-        return [Film.model_validate_json(film) for film in films.split(',')]
+        return orjson.loads(films)
 
-    async def _put_films_to_cache(self, films: List[Film], cache_key: str = ''):
+    async def _put_films_to_cache(self, films: List[Film], cache_key: str):
         await self.redis.set(
             cache_key,
             orjson.dumps(jsonable_encoder(films)),
