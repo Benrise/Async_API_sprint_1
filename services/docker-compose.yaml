@@ -51,7 +51,7 @@ services:
       resources:
         limits:
           memory: 50M
-    expose:
+    ports:
       - 6379:6379
     volumes:
       - ./redis/data:/data
