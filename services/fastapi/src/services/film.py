@@ -1,13 +1,22 @@
 from functools import lru_cache
-from typing import Optional
+from typing import Optional, List
 
 from elasticsearch import AsyncElasticsearch, NotFoundError
+
 from fastapi import Depends
+from fastapi.encoders import jsonable_encoder
+
 from redis.asyncio import Redis
+
+import orjson
 
 from db.elastic import get_elastic
 from db.redis import get_redis
+
 from models.film import Film
+
+from utils.es import build_body
+
 
 FILM_CACHE_EXPIRE_IN_SECONDS = 60 * 5
 
@@ -44,6 +53,47 @@ class FilmService:
 
     async def _put_film_to_cache(self, film: Film):
         await self.redis.set(film.id, film.model_dump_json(), FILM_CACHE_EXPIRE_IN_SECONDS)
+
+    async def get_films(
+                self,
+                query: str,
+                sort_order: str,
+                sort_field: str,
+                page: int,
+                size: int,
+                genre: str
+            ) -> List[Film]:
+        es_body = build_body(query, page, size, sort_order, sort_field, genre)
+        cache_key = f'films:{query}'
+        films = await self._films_from_cache(cache_key)
+        if films:
+            return films
+        films = await self._get_films_from_elastic(es_body)
+        if not films:
+            return []
+        await self._put_films_to_cache(films)
+        return films
+
+    async def _get_films_from_elastic(self, body: dict) -> Optional[List[Film]]:
+        try:
+            response = await self.elastic.search(index='movies', body=body)
+        except NotFoundError:
+            return None
+        films = [Film(**doc['_source']) for doc in response['hits']['hits']]
+        return films
+
+    async def _films_from_cache(self, cache_key: str) -> Optional[List[Film]]:
+        films = await self.redis.get(cache_key)
+        if not films:
+            return None
+        return [Film.model_validate_json(film) for film in films.split(',')]
+
+    async def _put_films_to_cache(self, films: List[Film], cache_key: str = ''):
+        await self.redis.set(
+            cache_key,
+            orjson.dumps(jsonable_encoder(films)),
+            FILM_CACHE_EXPIRE_IN_SECONDS
+        )
 
 
 @lru_cache()
