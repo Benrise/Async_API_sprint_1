@@ -53,6 +53,39 @@ class GenreService:
     async def _put_genre_to_cache(self, Genre: Genre):
         await self.redis.set(Genre.uuid, Genre.model_dump_json(), GENRE_CACHE_EXPIRE_IN_SECONDS)
 
+    async def get_genres(self, size: int) -> List[Genre]:
+        cache_key = 'genres'
+        body = build_body(size=size)
+        genres = await self._genres_from_cache(cache_key)
+        if genres:
+            return genres
+        genres = await self._get_genres_from_elastic(body)
+        if not genres:
+            return []
+        await self._put_genres_to_cache(genres, cache_key)
+        return genres
+
+    async def _get_genres_from_elastic(self, body) -> Optional[List[Genre]]:
+        try:
+            response = await self.elastic.search(index='genres', body=body)
+        except NotFoundError:
+            return None
+        genres = [Genre(**doc['_source']) for doc in response['hits']['hits']]
+        return genres
+
+    async def _genres_from_cache(self, cache_key: str) -> Optional[List[Genre]]:
+        genres: List[Genre] = await self.redis.get(cache_key)
+        if not genres:
+            return None
+        return orjson.loads(genres)
+
+    async def _put_genres_to_cache(self, genres: List[Genre], cache_key: str):
+        await self.redis.set(
+            cache_key,
+            orjson.dumps(jsonable_encoder(genres)),
+            GENRE_CACHE_EXPIRE_IN_SECONDS
+        )
+
 
 @lru_cache()
 def get_genre_service(

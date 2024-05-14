@@ -39,3 +39,5 @@ GENRE_DESC = "Фильтр по жанру фильма"
 GENRE_ALIAS = "genre_id"
 
 MAX_PAGE_SIZE = 100
+
+MAX_GENRES_SIZE = 50
