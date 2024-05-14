@@ -1,48 +1,6 @@
 version: "3.9"
 
 services:
-  db:
-    container_name: "db"
-    build: ./db
-    env_file:
-      - ./backend/.env
-    volumes:
-      - ./db/data:/var/lib/postgresql/data
-    expose:
-      - "5432"
-    ports:
-      - 5433:5432
-    healthcheck:
-        test: ["CMD", "psql", "-h", "localhost", "-U", "app", "-d", "movies_database"]
-        interval: 2s
-        retries: 100
-
-  sqlite-transfer:
-    container_name: "sqlite-transfer"
-    build: ./sqlite_transfer
-    env_file:
-      - ./backend/.env
-    depends_on:
-      app:
-        condition: service_healthy
-
-  app:
-    container_name: "app"
-    build: ./backend
-    env_file:
-      - ./backend/.env
-    expose:
-      - "8000"
-    depends_on:
-      db:
-        condition: service_healthy
-    volumes:
-      - ./backend/static:/opt/app/static
-    healthcheck:
-      test: ["CMD-SHELL", "[ -e /opt/app/static ]"]
-      interval: 2s
-      retries: 100
-
   redis:
     container_name: "redis"
     image: redis:7.2.4
@@ -61,42 +19,17 @@ services:
       timeout: 10s
       retries: 50
 
-  swagger:
-    container_name: "docs"
-    image: swaggerapi/swagger-ui:v5.11.8
-    volumes:
-      - ./swagger/openapi.yaml:/swagger.yaml
-    env_file:
-      - ./backend/.env
-    ports:
-      - 8080:8080
-    depends_on:
-      - app
-
   fastapi:
     container_name: "fastapi"
     build: ./fastapi
     env_file:
-      - ./fastapi/.env
+      - ./fastapi/env/prod/.env
     command: ["/app/src/docker/app.sh"]
     ports:
       - 3000:3000
     depends_on:
       - elasticsearch
       - redis
-
-  nginx:
-    container_name: "nginx"
-    restart: always
-    build: ./nginx
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/configs:/etc/nginx/conf.d:ro
-      - ./backend/static:/static/:ro
-    depends_on:
-      - app
-    ports:
-      - "80:80"
 
   elasticsearch:
     container_name: "elasticsearch"
@@ -123,3 +56,10 @@ services:
       test: ["CMD", "curl", "-f", "http://localhost:5601"]
       retries: 300
       interval: 2s
+    
+  etl_loader:
+    container_name: "etl_loader"
+    build: ./etl_loader
+    depends_on: 
+      elasticsearch:
+        condition: service_healthy

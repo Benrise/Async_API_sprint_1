@@ -3,6 +3,10 @@ from logging import config as logging_config
 
 from core.logger import LOGGING
 
+from dotenv import load_dotenv
+
+load_dotenv('../../env/dev/.env', override=True)
+
 logging_config.dictConfig(LOGGING)
 
 PROJECT_NAME = os.getenv('PROJECT_NAME', 'movies')

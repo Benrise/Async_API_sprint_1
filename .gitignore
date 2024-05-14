@@ -142,17 +142,8 @@ GitHub.sublime-settings
 # Mac OS Desktop Services Store
 *.DS_Store
 
-# Django's generated static files
-services/backend/static
-
-# DB's generated data
-services/db/data
-
 # ES's generated data
 services/es/data
 
 # Redis's generated data
 services/redis/data
-
-# State's generated data
-services/etl/state/*.json

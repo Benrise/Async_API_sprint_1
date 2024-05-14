@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
 
-class Person(BaseModel):
-    full_name: str
+class Genre(BaseModel):
     uuid: str
+    name: str

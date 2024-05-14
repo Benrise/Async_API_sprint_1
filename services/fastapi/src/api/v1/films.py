@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
 from models.person import Person
+from models.genre import Genre
 
 from services.film import FilmService, get_film_service
 
@@ -16,22 +17,22 @@ router = APIRouter()
 
 # Модель ответа API (не путать с моделью данных)
 class Film(BaseModel):
-    id: str
+    uuid: str
     title: str
     imdb_rating: Optional[float]
     description: Optional[str]
     directors: Optional[List[Person]]
-    genres: Optional[List[str]]
+    genres: Optional[List[Genre]]
     actors: Optional[List[Person]]
     writers: Optional[List[Person]]
 
 
 @router.get('/{film_id}',
             response_model=Film,
-            summary='Получить информацию о фильме по его id',
+            summary='Получить информацию о фильме по его uuid',
             description='''
                 Формат данных ответа:
-                        id,
+                        uuid,
                         title,
                         imdb_rating,
                         description,
@@ -44,7 +45,7 @@ async def film_details(film_id: str, film_service: FilmService = Depends(get_fil
     film = await film_service.get_by_id(film_id)
     if not film:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='film not found')
-    return Film(id=film.id,
+    return Film(uuid=film.uuid,
                 title=film.title,
                 imdb_rating=film.imdb_rating,
                 description=film.description,
@@ -57,7 +58,7 @@ async def film_details(film_id: str, film_service: FilmService = Depends(get_fil
 @router.get('',
             response_model=List[Film],
             summary='Получить список фильмов',
-            description='Формат массива данных ответа: id, title, imdb_rating, description, genre, actors, writers, directors')
+            description='Формат массива данных ответа: uuid, title, imdb_rating, description, genre, actors, writers, directors')
 async def films_list(
         query: str = Query(
             default=None,

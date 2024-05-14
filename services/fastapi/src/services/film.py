@@ -52,7 +52,7 @@ class FilmService:
         return film
 
     async def _put_film_to_cache(self, film: Film):
-        await self.redis.set(film.id, film.model_dump_json(), FILM_CACHE_EXPIRE_IN_SECONDS)
+        await self.redis.set(film.uuid, film.model_dump_json(), FILM_CACHE_EXPIRE_IN_SECONDS)
 
     async def get_films(
                 self,
@@ -80,6 +80,7 @@ class FilmService:
             response = await self.elastic.search(index='movies', body=body)
         except NotFoundError:
             return None
+        print('\n', response, '\n')
         films = [Film(**doc['_source']) for doc in response['hits']['hits']]
         return films
 
