@@ -10,6 +10,7 @@ from process.elasticloader import ElasticLoader
 
 ES = "http://127.0.0.1:9200"
 
+
 def movie_loader(file: json, index: str) -> None:
     with open(file, encoding='utf8') as f:
         content = f.read()
