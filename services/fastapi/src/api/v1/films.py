@@ -11,6 +11,8 @@ from services.film import FilmService, get_film_service
 
 import core.config as config
 
+from utils.enums import Sort
+
 
 router = APIRouter()
 
@@ -65,8 +67,8 @@ async def films_list(
             alias=config.QUERY_ALIAS,
             description=config.QUERY_DESC
         ),
-        sort_order: str = Query(
-            default='desc',
+        sort_order: Sort = Query(
+            default=Sort.desc.name,
             alias=config.SORT_ORDER_ALIAS,
             description=config.SORT_ORDER_DESC
         ),

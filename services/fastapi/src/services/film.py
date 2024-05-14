@@ -1,9 +1,11 @@
 from functools import lru_cache
 from typing import Optional, List
 
-from elasticsearch import AsyncElasticsearch, NotFoundError
+from http import HTTPStatus
 
-from fastapi import Depends
+from elasticsearch import AsyncElasticsearch, NotFoundError, BadRequestError
+
+from fastapi import Depends, HTTPException
 from fastapi.encoders import jsonable_encoder
 
 from redis.asyncio import Redis
@@ -63,9 +65,9 @@ class FilmService:
                 size: int,
                 genre: str
             ) -> List[Film]:
+        page = page - 1
         es_body = build_body(query, page, size, sort_order, sort_field, genre)
         cache_key = f'films:{query}:{sort_order}:{sort_field}:{page}:{size}:{genre}'
-        print(cache_key)
         films = await self._films_from_cache(cache_key)
         if films:
             return films
@@ -80,7 +82,8 @@ class FilmService:
             response = await self.elastic.search(index='movies', body=body)
         except NotFoundError:
             return None
-        print('\n', response, '\n')
+        except BadRequestError:
+            raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail='no matching sort field')
         films = [Film(**doc['_source']) for doc in response['hits']['hits']]
         return films
 
