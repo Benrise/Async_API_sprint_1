@@ -56,6 +56,39 @@ class PersonService:
     async def _put_person_to_cache(self, person: Person):
         await self.redis.set(person.uuid, person.model_dump_json(), PERSON_CACHE_EXPIRE_IN_SECONDS)
 
+    async def get_persons(self, query: str, page: int, size: int) -> List[Person]:
+        es_body = build_body(query, page, size)
+        cache_key = f'persons:{query}:{page}:{size}'
+        persons = await self._persons_from_cache(cache_key)
+        if persons:
+            return persons
+        persons = await self._get_persons_from_elastic(es_body)
+        if not persons:
+            return []
+        await self._put_persons_to_cache(persons, cache_key)
+        return persons
+
+    async def _get_persons_from_elastic(self, body) -> Optional[List[Person]]:
+        try:
+            response = await self.elastic.search(index='persons', body=body)
+        except NotFoundError:
+            return None
+        persons = [Person(**doc['_source']) for doc in response['hits']['hits']]
+        return persons
+
+    async def _persons_from_cache(self, cache_key: str) -> Optional[List[Person]]:
+        persons: List[Person] = await self.redis.get(cache_key)
+        if not persons:
+            return None
+        return orjson.loads(persons)
+
+    async def _put_persons_to_cache(self, persons: List[Person], cache_key: str):
+        await self.redis.set(
+            cache_key,
+            orjson.dumps(jsonable_encoder(persons)),
+            PERSON_CACHE_EXPIRE_IN_SECONDS
+        )
+
 
 @lru_cache()
 def get_person_service(

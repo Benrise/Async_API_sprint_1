@@ -17,7 +17,6 @@ router = APIRouter()
 
 
 # Модель ответа API (не путать с моделью данных)
-
 class RoleID(TypedDict):
     uuid = UUID
     roles = List[str]
@@ -46,3 +45,37 @@ async def person_details(person_id: str, person_service: PersonService = Depends
     if not person:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='person not found')
     return Person(uuid=person.uuid, full_name=person.full_name, films=person.films)
+
+
+@router.get('',
+            response_model=List[Person],
+            summary='Получить список людей',
+            description='Формат массива данных ответа: uuid, full_name, films')
+async def persons_list(
+        query: str = Query(
+            default=None,
+            alias=config.QUERY_ALIAS,
+            description=config.QUERY_DESC
+        ),
+        page: int = Query(
+            default=1,
+            ge=1,
+            alias=config.PAGE_ALIAS,
+            description=config.PAGE_DESC
+        ),
+        size: int = Query(
+            default=10,
+            ge=1,
+            le=config.MAX_PAGE_SIZE,
+            alias=config.SIZE_ALIAS,
+            description=config.SIZE_DESC
+        ),
+        person_service: PersonService = Depends(get_person_service)) -> List[Person]:
+    persons = await person_service.get_persons(
+        query,
+        page,
+        size,
+    )
+    if not persons:
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='persons not found')
+    return persons
