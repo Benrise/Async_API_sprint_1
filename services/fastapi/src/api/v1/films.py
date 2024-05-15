@@ -1,14 +1,12 @@
+import core.config as config
+
 from http import HTTPStatus
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from services.film import FilmService, get_film_service
-
-import core.config as config
-
 from utils.enums import Sort
-
 from .schema import Film
 
 

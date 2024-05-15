@@ -1,8 +1,8 @@
 import logging
+import uvicorn
 
 from contextlib import asynccontextmanager
 
-import uvicorn
 from elasticsearch import AsyncElasticsearch
 from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse

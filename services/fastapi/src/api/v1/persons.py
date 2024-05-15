@@ -5,9 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import List
 
 from services.person import PersonService, get_person_service
-
 import core.config as config
-
 from .schema import PersonFilms, FilmRating
 
 router = APIRouter()

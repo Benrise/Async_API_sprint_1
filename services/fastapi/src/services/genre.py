@@ -1,3 +1,5 @@
+import orjson
+
 from functools import lru_cache
 from typing import Optional, List
 
@@ -7,8 +9,6 @@ from fastapi import Depends
 from fastapi.encoders import jsonable_encoder
 
 from redis.asyncio import Redis
-
-import orjson
 
 from db.elastic import get_elastic
 from db.redis import get_redis

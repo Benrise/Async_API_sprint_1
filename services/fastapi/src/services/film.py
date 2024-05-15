@@ -3,6 +3,8 @@ from typing import Optional, List
 
 from http import HTTPStatus
 
+import orjson
+
 from elasticsearch import AsyncElasticsearch, NotFoundError, BadRequestError
 
 from fastapi import Depends, HTTPException
@@ -10,13 +12,10 @@ from fastapi.encoders import jsonable_encoder
 
 from redis.asyncio import Redis
 
-import orjson
-
 from db.elastic import get_elastic
 from db.redis import get_redis
 
-from models.film import Film
-
+from models.film import Fil
 from utils.es import build_body
 
 

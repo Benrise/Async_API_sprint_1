@@ -2,9 +2,7 @@ from models.person import Person
 from models.genre import Genre
 
 from typing import Optional, List
-
 from pydantic import BaseModel
-
 from typing_extensions import TypedDict
 
 

@@ -1,25 +1,22 @@
+import orjson
+
 from functools import lru_cache
 from typing import Optional, List
 
-from http import HTTPStatus
+from elasticsearch import AsyncElasticsearch, NotFoundError
 
-from elasticsearch import AsyncElasticsearch, NotFoundError, BadRequestError
-
-from fastapi import Depends, HTTPException
+from fastapi import Depends
 from fastapi.encoders import jsonable_encoder
 
 from redis.asyncio import Redis
-
-import orjson
 
 from db.elastic import get_elastic
 from db.redis import get_redis
 
 from models.person import PersonFilms
+from models.film import FilmRating
 
 from utils.es import build_body
-
-from models.film import FilmRating
 
 PERSON_CACHE_EXPIRE_IN_SECONDS = 60 * 5
 

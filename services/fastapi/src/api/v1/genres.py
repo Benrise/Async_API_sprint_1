@@ -1,12 +1,11 @@
+import core.config as config
+
 from http import HTTPStatus
-from typing import Optional, List
+from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
 
 from services.genre import GenreService, get_genre_service
-
-import core.config as config
-
 from .schema import Genre
 
 

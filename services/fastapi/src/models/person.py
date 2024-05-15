@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from typing_extensions import TypedDict
-from typing import List, Optional
+from typing import List
 
 
 class RoleID(TypedDict):
