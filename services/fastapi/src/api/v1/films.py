@@ -1,11 +1,7 @@
 from http import HTTPStatus
-from typing import Optional, List
+from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from pydantic import BaseModel
-
-from models.person import Person
-from models.genre import Genre
 
 from services.film import FilmService, get_film_service
 
@@ -13,20 +9,10 @@ import core.config as config
 
 from utils.enums import Sort
 
+from .schema import Film
+
 
 router = APIRouter()
-
-
-# Модель ответа API (не путать с моделью данных)
-class Film(BaseModel):
-    uuid: str
-    title: str
-    imdb_rating: Optional[float]
-    description: Optional[str]
-    directors: Optional[List[Person]]
-    genres: Optional[List[Genre]]
-    actors: Optional[List[Person]]
-    writers: Optional[List[Person]]
 
 
 @router.get('/{film_id}',
