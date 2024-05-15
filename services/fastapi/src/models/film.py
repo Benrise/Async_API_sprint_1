@@ -17,3 +17,9 @@ class Film(BaseModel):
 
     class Config:
         allow_population_by_field_name = True
+
+
+class FilmRating(BaseModel):
+    uuid: str
+    title: str
+    imdb_rating: float

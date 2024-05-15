@@ -19,6 +19,7 @@ from models.person import Person
 
 from utils.es import build_body
 
+from models.film import FilmRating
 
 PERSON_CACHE_EXPIRE_IN_SECONDS = 60 * 5
 
@@ -89,6 +90,32 @@ class PersonService:
             PERSON_CACHE_EXPIRE_IN_SECONDS
         )
 
+    async def get_person_film_rating(self, person_id: str) -> Optional[FilmRating]:
+        person_film_rating = await self._get_films_by_person(person_id)
+        if not person_film_rating:
+            return None
+        return person_film_rating
+
+    async def _get_films_by_person(self, person_id) -> Optional[FilmRating]:
+        sorting = {"imdb_rating": {"order": "desc"}}
+        try:
+            doc = await self.elastic.search(index='persons',
+                                            body={"query": {"match": {"uuid": {"query": person_id}}}},
+                                            _source_includes=['films.uuid',])
+
+            film_ids = [i['_source']['films'] for i in doc['hits']['hits']][0]
+            ids = [id['uuid'] for id in film_ids]
+
+            doc_movies = await self.elastic.search(index='movies',
+                                                   body={
+                                                       "query": {"ids": {"values": ids}},
+                                                       "sort": sorting, "from": 0, "size": 100
+                                                   },
+                                                   _source_includes=['uuid', 'title', 'imdb_rating'])
+            ratings = [FilmRating(**i['_source']) for i in doc_movies['hits']['hits']]
+        except NotFoundError:
+            return None
+        return ratings
 
 @lru_cache()
 def get_person_service(

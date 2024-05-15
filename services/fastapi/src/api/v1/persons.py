@@ -10,6 +10,8 @@ from typing import Optional, List
 
 from services.person import PersonService, get_person_service
 
+from models.film import FilmRating
+
 import core.config as config
 
 
@@ -79,3 +81,12 @@ async def persons_list(
     if not persons:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='persons not found')
     return persons
+
+
+@router.get('/{person_id}/film', response_model=list[FilmRating])
+async def person_by_films(person_id: str, person_service: PersonService = Depends(get_person_service)) -> list[FilmRating]:
+    person_films = await person_service.get_person_film_rating(person_id)
+    if not person_films:
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='person not found')
+
+    return [FilmRating(uuid=person_id, title=p_film.title, imdb_rating=p_film.imdb_rating) for p_film in person_films]
