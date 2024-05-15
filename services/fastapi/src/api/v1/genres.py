@@ -4,8 +4,6 @@ from typing import Optional, List
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
-from models.person import Person
-
 from services.genre import GenreService, get_genre_service
 
 import core.config as config
