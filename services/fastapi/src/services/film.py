@@ -15,7 +15,7 @@ from redis.asyncio import Redis
 from db.elastic import get_elastic
 from db.redis import get_redis
 
-from models.film import Fil
+from models.film import Film
 from utils.es import build_body
 
 

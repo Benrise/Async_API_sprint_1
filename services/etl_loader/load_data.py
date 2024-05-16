@@ -1,3 +1,4 @@
+import os
 import sys
 import json
 
@@ -7,8 +8,16 @@ from elasticsearch import Elasticsearch
 from utils.logger import logger
 
 from process.elasticloader import ElasticLoader
+from dotenv import load_dotenv
 
-ES = "http://127.0.0.1:9200"
+load_dotenv('./env/dev/.env', override=False)
+
+ELASTIC_PROTOCOL = os.getenv('ELASTIC_PROTOCOL', 'http')
+ELASTIC_HOST = os.getenv('ELASTIC_HOST', '127.0.0.1')
+ELASTIC_PORT = int(os.getenv('ELASTIC_PORT', 9200))
+
+
+hosts = [f'{ELASTIC_PROTOCOL}://{ELASTIC_HOST}:{ELASTIC_PORT}']
 
 
 def movie_loader(file: json, index: str) -> None:
@@ -67,7 +76,7 @@ def main(indices: List[tuple]) -> None:
 
 if __name__ == '__main__':
 
-    client = Elasticsearch(ES)
+    client = Elasticsearch(hosts=hosts)
     es = ElasticLoader(client)
 
     indices = [

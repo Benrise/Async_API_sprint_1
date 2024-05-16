@@ -63,3 +63,9 @@ services:
     depends_on: 
       elasticsearch:
         condition: service_healthy
+    env_file:
+      - ./etl_loader/env/prod/.env
+    environment:
+      - ELASTIC_PROTOCOL=http
+      - ELASTIC_HOST=elasticsearch
+      - ELASTIC_PORT=9200
