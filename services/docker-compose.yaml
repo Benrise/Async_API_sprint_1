@@ -1,6 +1,18 @@
 version: "3.9"
 
 services:
+
+  nginx:
+    container_name: "nginx"
+    restart: always
+    build: ./nginx
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/configs:/etc/nginx/conf.d:ro
+    depends_on:
+      - fastapi
+    ports:
+      - 80:80
   redis:
     container_name: "redis"
     image: redis:7.2.4
@@ -10,7 +22,7 @@ services:
         limits:
           memory: 50M
     ports:
-      - 6379:6379
+      - ${REDIS_PORTS}
     volumes:
       - ./redis/data:/data
     healthcheck:
@@ -25,8 +37,10 @@ services:
     env_file:
       - ./fastapi/env/prod/.env
     command: ["/app/src/docker/app.sh"]
+    expose:
+      - 3000
     ports:
-      - 3000:3000
+      - 3000
     depends_on:
       - elasticsearch
       - redis
@@ -35,10 +49,15 @@ services:
     container_name: "elasticsearch"
     image: elasticsearch:8.12.1
     ports:
-      - 9200:9200
+      - ${ELASTIC_PORTS}
+    environment:
+      - node.name=es01
+      - cluster.name=es-docker-cluster
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      # - "ES_JAVA_OPTS=-Xms200m -Xmx200m"
     volumes:
-      - "./es/data:/usr/share/elasticsearch/data"
-      - "./es/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml"
+      - data01:/usr/share/elasticsearch/data
     healthcheck:
       test: ["CMD-SHELL", "curl -s http://localhost:9200/_cat/health?h=status | grep -q green"]
       retries: 300
@@ -69,3 +88,7 @@ services:
       - ELASTIC_PROTOCOL=http
       - ELASTIC_HOST=elasticsearch
       - ELASTIC_PORT=9200
+
+
+volumes:
+  data01:

@@ -1,4 +1,9 @@
 # Проектная работа 4 спринта
+### [Async_API_sprint_1](https://github.com/mijail-naal/Async_API_sprint_1)
+
+Команда: [Михаил](https://github.com/mijail-naal) [Артём](https://github.com/Benrise) [Максим](https://github.com/4Surpr1se)
+
+[Приглашение](https://github.com/mijail-naal/Async_API_sprint_1/invitations)
 
 ## Корневая директория сервиса - services
 
@@ -24,13 +29,14 @@
 
 Для успешного запуска необходимо удостовериться в определении корректных переменных окружения.
 
-**
-Для запуска сервисов в режиме production их IP-адреса должны соответствовать названиям контейнеров.
+
+**Для запуска сервисов в режиме production их IP-адреса должны соответствовать названиям контейнеров.**
+<br>
 Пример: ELASTIC_HOST=elasticsearch
 
-Для запуска development используются IP-адреса, на которых работают сервисы.
+**Для запуска development используются IP-адреса, на которых работают сервисы.**
+<br>
 Пример: ELASTIC_HOST=localhost
-**
 
 
 ### Развертывание
@@ -43,5 +49,6 @@
 
 После успешного запуска elasticsearch запустится es_loader. Загрузка данных может занимать от 1 до 3 минут.
 
+https://github.com/BigDeepBlue
 
 

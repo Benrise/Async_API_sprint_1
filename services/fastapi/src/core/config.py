@@ -3,20 +3,28 @@ from logging import config as logging_config
 
 from core.logger import LOGGING
 
-from dotenv import load_dotenv
+from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
-load_dotenv('../../env/dev/.env', override=False)
 
 logging_config.dictConfig(LOGGING)
 
-PROJECT_NAME = os.getenv('PROJECT_NAME', 'movies')
 
-REDIS_HOST = os.getenv('REDIS_HOST', '127.0.0.1')
-REDIS_PORT = int(os.getenv('REDIS_PORT', 6379))
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file='../env/prod/.env',
+        env_file_encoding='utf-8'
+    )
+    project_name: str = ...
+    redis_host: str = Field(9200, alias='REDIS_HOST')
+    redis_port: int = Field(6379, alias='REDIS_PORT')
+    elastic_protocol: str = ...
+    elastic_host: str = Field('127.0.0.1', alias='ELASTIC_HOST')
+    elastic_port: int = Field(9200, alias='ELASTIC_PORT')
 
-ELASTIC_PROTOCOL = os.getenv('ELASTIC_PROTOCOL', 'http')
-ELASTIC_HOST = os.getenv('ELASTIC_HOST', '127.0.0.1')
-ELASTIC_PORT = int(os.getenv('ELASTIC_PORT', 9200))
+
+settings = Settings()
+
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 

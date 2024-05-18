@@ -1,14 +1,8 @@
 from pydantic import BaseModel
 from typing_extensions import TypedDict
-from typing import List
 
 
-class RoleID(TypedDict):
-    uuid = str
-    roles = List[str]
-
-
-id_role_dict = TypedDict('RoleID', {'uuid': str, 'roles': List[str]})
+id_role_dict = TypedDict('RoleID', {'uuid': str, 'roles': list[str]})
 
 
 class Person(BaseModel):
@@ -16,7 +10,5 @@ class Person(BaseModel):
     full_name: str
 
 
-class PersonFilms(BaseModel):
-    uuid: str
-    full_name: str
-    films: List[id_role_dict]
+class PersonFilms(Person):
+    films: list[id_role_dict]

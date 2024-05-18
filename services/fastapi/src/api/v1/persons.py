@@ -2,11 +2,10 @@ from http import HTTPStatus
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
-from typing import List
-
 from services.person import PersonService, get_person_service
 import core.config as config
-from .schema import PersonFilms, FilmRating
+from models.person import PersonFilms
+from models.film import FilmRating
 
 router = APIRouter()
 
@@ -27,8 +26,9 @@ async def person_details(person_id: str, person_service: PersonService = Depends
     return PersonFilms(uuid=person.uuid, full_name=person.full_name, films=person.films)
 
 
-@router.get('',
-            response_model=List[PersonFilms],
+@router.get('/search/',
+            response_model=list[PersonFilms],
+            defautlt='Lucas',
             summary='Получить список людей',
             description='Формат массива данных ответа: uuid, full_name, films')
 async def persons_list(
@@ -50,7 +50,7 @@ async def persons_list(
             alias=config.SIZE_ALIAS,
             description=config.SIZE_DESC
         ),
-        person_service: PersonService = Depends(get_person_service)) -> List[PersonFilms]:
+        person_service: PersonService = Depends(get_person_service)) -> list[PersonFilms]:
     persons = await person_service.get_persons(
         query,
         page,

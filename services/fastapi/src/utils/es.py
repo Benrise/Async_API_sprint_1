@@ -1,5 +1,3 @@
-from typing import Dict, Optional
-
 
 def build_body(
     query: str = None,
@@ -7,8 +5,8 @@ def build_body(
     size: int = 10,
     sort_order: str = None,
     sort_field: str = None,
-    genre_id: Optional[str] = None
-) -> Dict:
+    genre_id: str | None = None
+) -> dict:
     bool_clause = {"must": [{"multi_match": {"query": query}}]} if query else {}
     sort_clause = {sort_field: {"order": sort_order} } if sort_order and sort_field else {}
     if genre_id:

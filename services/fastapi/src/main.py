@@ -10,7 +10,7 @@ from redis.asyncio import Redis
 
 from api.v1 import films, genres, persons
 
-from core import config
+from core.config import settings
 from core.logger import LOGGING
 from db import elastic
 from db import redis
@@ -18,16 +18,18 @@ from db import redis
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    redis.redis = Redis(host=config.REDIS_HOST, port=config.REDIS_PORT)
+    redis.redis = Redis(host=settings.redis_host, port=settings.redis_port)
     elastic.es = AsyncElasticsearch(
-        hosts=[f'{config.ELASTIC_PROTOCOL}://{config.ELASTIC_HOST}:{config.ELASTIC_PORT}']
+        hosts=[
+            f'{settings.elastic_protocol}://{settings.elastic_host}:{settings.elastic_port}'
+        ]
     )
     yield
     await redis.redis.close()
     await elastic.es.close()
 
 app = FastAPI(
-    title=config.PROJECT_NAME,
+    title=settings.project_name,
     docs_url='/api/openapi',
     openapi_url='/api/openapi.json',
     default_response_class=ORJSONResponse,

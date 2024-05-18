@@ -1,7 +1,6 @@
 import orjson
 
 from functools import lru_cache
-from typing import Optional, List
 
 from elasticsearch import AsyncElasticsearch, NotFoundError
 
@@ -26,24 +25,23 @@ class PersonService:
         self.redis = redis
         self.elastic = elastic
 
-    async def get_by_id(self, person_id: str) -> Optional[PersonFilms]:
+    async def get_by_id(self, person_id: str) -> PersonFilms | None:
         person = await self._person_from_cache(person_id)
         if not person:
             person = await self._get_person_from_elastic(person_id)
             if not person:
                 return None
             await self._put_person_to_cache(person)
-
         return person
 
-    async def _get_person_from_elastic(self, person_id: str) -> Optional[PersonFilms]:
+    async def _get_person_from_elastic(self, person_id: str) -> PersonFilms | None:
         try:
             doc = await self.elastic.get(index='persons', id=person_id)
         except NotFoundError:
             return None
         return PersonFilms(**doc['_source'])
 
-    async def _person_from_cache(self, person_id: str) -> Optional[PersonFilms]:
+    async def _person_from_cache(self, person_id: str) -> PersonFilms | None:
         data = await self.redis.get(person_id)
         if not data:
             return None
@@ -54,9 +52,11 @@ class PersonService:
     async def _put_person_to_cache(self, person: PersonFilms):
         await self.redis.set(person.uuid, person.model_dump_json(), PERSON_CACHE_EXPIRE_IN_SECONDS)
 
-    async def get_persons(self, query: str, page: int, size: int) -> List[PersonFilms]:
+    async def get_persons(self, query: str, page: int, size: int) -> list[PersonFilms]:
+        page -= 1
         es_body = build_body(query, page, size)
-        cache_key = f'persons:{query}:{page}:{size}'
+        word = query.lower()
+        cache_key = f'persons:query:{word}'
         persons = await self._persons_from_cache(cache_key)
         if persons:
             return persons
@@ -66,7 +66,7 @@ class PersonService:
         await self._put_persons_to_cache(persons, cache_key)
         return persons
 
-    async def _get_persons_from_elastic(self, body) -> Optional[List[PersonFilms]]:
+    async def _get_persons_from_elastic(self, body) -> list[PersonFilms] | None:
         try:
             response = await self.elastic.search(index='persons', body=body)
         except NotFoundError:
@@ -74,26 +74,26 @@ class PersonService:
         persons = [PersonFilms(**doc['_source']) for doc in response['hits']['hits']]
         return persons
 
-    async def _persons_from_cache(self, cache_key: str) -> Optional[List[PersonFilms]]:
-        persons: List[PersonFilms] = await self.redis.get(cache_key)
+    async def _persons_from_cache(self, cache_key: str) -> list[PersonFilms] | None:
+        persons: list[PersonFilms] = await self.redis.get(cache_key)
         if not persons:
             return None
         return orjson.loads(persons)
 
-    async def _put_persons_to_cache(self, persons: List[PersonFilms], cache_key: str):
+    async def _put_persons_to_cache(self, persons: list[PersonFilms], cache_key: str):
         await self.redis.set(
             cache_key,
             orjson.dumps(jsonable_encoder(persons)),
             PERSON_CACHE_EXPIRE_IN_SECONDS
         )
 
-    async def get_person_film_rating(self, person_id: str) -> Optional[FilmRating]:
+    async def get_person_film_rating(self, person_id: str) -> FilmRating | None:
         person_film_rating = await self._get_films_by_person(person_id)
         if not person_film_rating:
             return None
         return person_film_rating
 
-    async def _get_films_by_person(self, person_id) -> Optional[FilmRating]:
+    async def _get_films_by_person(self, person_id) -> FilmRating | None:
         sorting = {"imdb_rating": {"order": "desc"}}
         try:
             doc = await self.elastic.search(index='persons',
